@@ -22,7 +22,7 @@ namespace Audio_Record
                         break;
 
                     case 'p':
-                        rec.AsyncStart();
+                        rec.RecordStart();
                         break;
 
                     default:

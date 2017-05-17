@@ -1,8 +1,5 @@
 ﻿using NAudio.Wave;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace Audio_Record
@@ -12,11 +9,12 @@ namespace Audio_Record
         private IWaveIn wi;
         private WaveFileWriter wfw;
 
-        private readonly string fileName = RecordConfig.FileName;
-        private readonly int samplelate = RecordConfig.Samplelate;
-        private readonly int mode = RecordConfig.Mode;
+        private readonly string fileName    = RecordConfig.FileName;
+        private readonly string filePath    = RecordConfig.FilePath;
+        private readonly int    samplelate  = RecordConfig.Samplelate;
+        private readonly int    mode        = RecordConfig.Mode;
 
-        public void AsyncStart()
+        public void RecordStart()
         {
             Task.Factory.StartNew(run);
         }
@@ -32,10 +30,10 @@ namespace Audio_Record
             wi.DataAvailable += new EventHandler<WaveInEventArgs>(wi_DataAvailable);
             wi.RecordingStopped += new EventHandler<StoppedEventArgs>(wi_RecordingStopped);
             wi.WaveFormat = new WaveFormat(samplelate, mode);
-            wfw = new WaveFileWriter(fileName, wi.WaveFormat);
+            wfw = new WaveFileWriter(filePath + fileName, wi.WaveFormat);
         }
 
-        private void wi_printWaveDevice()
+        private void printWaveDevice()
         {
             int devcount = WaveIn.DeviceCount;
             Console.Out.WriteLine("Device Count: {0}", devcount);
@@ -49,7 +47,7 @@ namespace Audio_Record
         private void run()
         {
             initWI();
-            wi_printWaveDevice();
+            printWaveDevice();
             wi.StartRecording();
         }
 

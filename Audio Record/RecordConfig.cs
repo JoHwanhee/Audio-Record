@@ -8,7 +8,9 @@ namespace Audio_Record
 {
     public class RecordConfig
     {
-        public const string FileName = @"./test.wav";
+        public const string FileName = @"test.wav";
+        public const string FilePath = @"./";
+        
         public const int    Samplelate = 44100;
         public const int    Mode = 1;
     }
