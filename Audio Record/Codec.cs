@@ -1,13 +1,11 @@
-﻿#define _LZ4_
-using System.IO;
+﻿using System.IO;
 using NAudio.Lame;
 using NAudio.Wave;
 using System;
-using Lz4Net;
 
 namespace Audio_Record
 {
-    internal static class Encoder
+    internal static class Codec
     {
         public static void ConvertWavStreamToMp3File(string wavFileName, string mp3FileName)
         {
@@ -27,8 +25,15 @@ namespace Audio_Record
             if (data == null)
                 throw new ArgumentNullException("input data to compress should not be null");
 
-            byte[] compress = null;
-            compress = Lz4.CompressBytes(data, Lz4Mode.Fast);
+            byte[] compress = new byte[data.Length];
+            //compress = Lz4.CompressBytes(data, Lz4Mode.Fast);
+
+            for (int i = 0; i < data.Length; i++)
+            {
+                compress[i] = (byte)NAudio.Codecs.MuLawDecoder.MuLawToLinearSample(data[i]);
+            }
+
+
             return compress;
         }
         public static byte[] Decompress(byte[] data)
@@ -36,8 +41,14 @@ namespace Audio_Record
             if (data == null)
                 throw new ArgumentNullException("input data to decompress should not be null");
 
-            byte[] decompressed = null;
-            decompressed = Lz4.DecompressBytes(data);
+            byte[] decompressed = new byte[data.Length];
+            //decompressed = Lz4.DecompressBytes(data);
+
+            for (int i = 0; i < data.Length; i++)
+            {
+                decompressed[i] = (byte)NAudio.Codecs.MuLawDecoder.MuLawToLinearSample(data[i]);
+            }
+
             return decompressed;
         }
     }

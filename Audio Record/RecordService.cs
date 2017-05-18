@@ -65,17 +65,18 @@ namespace Audio_Record
         private void Wi_DataAvailable(object sender, WaveInEventArgs e)
         {
             //currently the ACK is disabled because with the PCM data being so big it causes lag on audio
-            byte[] data = Encoder.Compress(e.Buffer);
+            byte[] data = Codec.Compress(e.Buffer);
+            _buffer.AddSamples(Codec.Decompress(data), 0, e.BytesRecorded);
+            _woe.Play();
            
             //int ret = SendData(Protocol.SEND_DATA, data);
             //Debug.WriteLine("Compressed size: {0:F2}%",100 * ((double)data.Length / (double)e.Buffer.Length));
             
-            _wfw.Write(e.Buffer, 0, e.BytesRecorded);
-            _wfw.Flush();
-
-            _buffer.AddSamples(Encoder.Decompress(data), 0, e.BytesRecorded);
-            _woe.Play();
+            //_wfw.Write(e.Buffer, 0, e.BytesRecorded);
+            //_wfw.Flush();
         }
+
+        
         
         private void Wi_RecordingStopped(object sender, StoppedEventArgs sargs)
         {
@@ -83,7 +84,7 @@ namespace Audio_Record
             _wi.Dispose();
             _wfw.Close();
             
-            Encoder.ConvertWavStreamToMp3File(_filePath+_fileName, _filePath+"test.mp3");
+            //Encoder.ConvertWavStreamToMp3File(_filePath+_fileName, _filePath+"test.mp3");
         }
         #endregion
     }
