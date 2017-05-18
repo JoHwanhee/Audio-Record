@@ -1,74 +1,85 @@
-﻿using NAudio.Lame;
-using NAudio.Wave;
+﻿using NAudio.Wave;
 using System;
-using System.IO;
 using System.Threading.Tasks;
 
 namespace Audio_Record
 {
-    class RecordService
+    internal class RecordService
     {
-        private IWaveIn wi;
-        private WaveFileWriter wfw;
+        private IWaveIn _wi;
+        private WaveFileWriter _wfw;
 
-        private readonly string fileName    = RecordConfig.FileName;
-        private readonly string filePath    = RecordConfig.FilePath;
-        private readonly int    samplelate  = RecordConfig.Samplelate;
-        private readonly int    mode        = RecordConfig.Mode;
+        private WaveOutEvent _woe;
+        private BufferedWaveProvider _buffer;
+
+
+        private readonly string _fileName    = RecordConfig.FileName;
+        private readonly string _filePath    = RecordConfig.FilePath;
+        private readonly int    _samplelate  = RecordConfig.Samplelate;
+        private readonly int    _mode        = RecordConfig.Mode;
 
         public void RecordStart()
         {
-            Task.Factory.StartNew(run);
+            Task.Factory.StartNew(Run);
         }
 
         public void RecordStop()
         {
-            wi.StopRecording();
+            _wi.StopRecording();
         }
 
-        private void initWI()
+        private void InitWi()
         {
-            wi = new WaveIn(WaveCallbackInfo.FunctionCallback());
-            wi.DataAvailable += new EventHandler<WaveInEventArgs>(wi_DataAvailable);
-            wi.RecordingStopped += new EventHandler<StoppedEventArgs>(wi_RecordingStopped);
-            wi.WaveFormat = new WaveFormat(samplelate, mode);
-            wfw = new WaveFileWriter(filePath + fileName, wi.WaveFormat);
+            _wi = new WaveIn(WaveCallbackInfo.FunctionCallback());
+            _wi.DataAvailable += Wi_DataAvailable;
+            _wi.RecordingStopped += Wi_RecordingStopped;
+            _wi.WaveFormat = new WaveFormat(_samplelate, _mode);
+            _wfw = new WaveFileWriter(_filePath + _fileName, _wi.WaveFormat);
+            _buffer = new BufferedWaveProvider(_wi.WaveFormat);
+            _woe = new WaveOutEvent();
+            _woe.Init(_buffer);
+
+
         }
 
-        private void printWaveDevice()
+        private static void PrintWaveDevice()
         {
-            int devcount = WaveIn.DeviceCount;
+            var devcount = WaveIn.DeviceCount;
             Console.Out.WriteLine("Device Count: {0}", devcount);
-            for (int c = 0; c < devcount; ++c)
+            for (var c = 0; c < devcount; ++c)
             {
-                WaveInCapabilities info = WaveIn.GetCapabilities(c);
+                var info = WaveIn.GetCapabilities(c);
                 Console.Out.WriteLine("{0}, {1}", info.ProductName, info.Channels);
             }
         }
 
-        private void run()
+        private void Run()
         {
-            initWI();
-            printWaveDevice();
-            wi.StartRecording();
+            InitWi();
+            PrintWaveDevice();
+            _wi.StartRecording();
         }
 
 
 
         #region Event
-        private void wi_DataAvailable(object sender, WaveInEventArgs e)
+        private void Wi_DataAvailable(object sender, WaveInEventArgs e)
         {
-            wfw.Write(e.Buffer, 0, e.BytesRecorded);
-            wfw.Flush();
+            _wfw.Write(e.Buffer, 0, e.BytesRecorded);
+
+            _buffer.AddSamples(e.Buffer, 0, e.BytesRecorded);
+            _woe.Play();
+
+            _wfw.Flush();
         }
 
-        private void wi_RecordingStopped(object sender, StoppedEventArgs sargs)
+        private void Wi_RecordingStopped(object sender, StoppedEventArgs sargs)
         {
             Console.WriteLine("recording is stoped");
-            wi.Dispose();
-            wfw.Close();
+            _wi.Dispose();
+            _wfw.Close();
             
-            Encoder.ConvertWavStreamToMp3File(filePath+fileName, filePath+"test.mp3");
+            Encoder.ConvertWavStreamToMp3File(_filePath+_fileName, _filePath+"test.mp3");
         }
         #endregion
     }
