@@ -1,5 +1,7 @@
-﻿using NAudio.Wave;
+﻿using NAudio.Lame;
+using NAudio.Wave;
 using System;
+using System.IO;
 using System.Threading.Tasks;
 
 namespace Audio_Record
@@ -51,6 +53,8 @@ namespace Audio_Record
             wi.StartRecording();
         }
 
+
+
         #region Event
         private void wi_DataAvailable(object sender, WaveInEventArgs e)
         {
@@ -63,6 +67,8 @@ namespace Audio_Record
             Console.WriteLine("recording is stoped");
             wi.Dispose();
             wfw.Close();
+            
+            Encoder.ConvertWavStreamToMp3File(filePath+fileName, filePath+"test.mp3");
         }
         #endregion
     }
