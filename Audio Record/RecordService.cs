@@ -12,7 +12,6 @@ namespace Audio_Record
         private WaveOutEvent _woe;
         private BufferedWaveProvider _buffer;
 
-
         private readonly string _fileName    = RecordConfig.FileName;
         private readonly string _filePath    = RecordConfig.FilePath;
         private readonly int    _samplelate  = RecordConfig.Samplelate;
@@ -40,6 +39,7 @@ namespace Audio_Record
             _woe.Init(_buffer);
 
 
+
         }
 
         private static void PrintWaveDevice()
@@ -60,19 +60,23 @@ namespace Audio_Record
             _wi.StartRecording();
         }
 
-
-
+   
         #region Event
         private void Wi_DataAvailable(object sender, WaveInEventArgs e)
         {
+            //currently the ACK is disabled because with the PCM data being so big it causes lag on audio
+            byte[] data = Encoder.Compress(e.Buffer);
+           
+            //int ret = SendData(Protocol.SEND_DATA, data);
+            //Debug.WriteLine("Compressed size: {0:F2}%",100 * ((double)data.Length / (double)e.Buffer.Length));
+            
             _wfw.Write(e.Buffer, 0, e.BytesRecorded);
-
-            _buffer.AddSamples(e.Buffer, 0, e.BytesRecorded);
-            _woe.Play();
-
             _wfw.Flush();
-        }
 
+            _buffer.AddSamples(Encoder.Decompress(data), 0, e.BytesRecorded);
+            _woe.Play();
+        }
+        
         private void Wi_RecordingStopped(object sender, StoppedEventArgs sargs)
         {
             Console.WriteLine("recording is stoped");
